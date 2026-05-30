@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>むっつり度診断 - 100問テスト</title>
+<meta name="description" content="100問の質問であなたのむっつり度を診断するエンタメサイトです。" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #533483 100%);
+  min-height: 100vh; color: #fff; padding: 20px; line-height: 1.6;
+}
+.container { max-width: 720px; margin: 0 auto; padding: 20px; }
+.screen { display: none; animation: fadeIn 0.4s ease-in; }
+.screen.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#start-screen { text-align: center; padding: 40px 20px; }
+h1 { font-size: 2.4rem; margin-bottom: 16px; text-shadow: 0 2px 8px rgba(255,100,200,0.5); }
+.subtitle { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.9; }
+.info-box {
+  background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;
+  margin-bottom: 30px; text-align: left; backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.info-box p { margin: 8px 0; font-size: 0.95rem; }
+.btn-primary, .btn-secondary, .btn-share {
+  padding: 14px 36px; font-size: 1.05rem; font-weight: bold;
+  border: none; border-radius: 999px; cursor: pointer;
+  transition: all 0.25s ease; font-family: inherit;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #ff6b9d, #c060ff); color: #fff;
+  box-shadow: 0 4px 15px rgba(192,96,255,0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(192,96,255,0.6); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary {
+  background: rgba(255,255,255,0.15); color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.25); }
+.btn-secondary:disabled { opacity: 0.3; cursor: not-allowed; }
+.footer-note { font-size: 0.85rem; opacity: 0.7; margin-top: 20px; }
+.progress-container { margin-bottom: 24px; }
+.progress-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; font-weight: bold; }
+.progress-bar { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #ff6b9d, #c060ff); border-radius: 999px; width: 0%; transition: width 0.3s ease; }
+.question-card {
+  background: rgba(255,255,255,0.08); padding: 30px 24px; border-radius: 16px;
+  margin-bottom: 24px; backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12); min-height: 280px;
+}
+.question-number { font-size: 0.9rem; color: #ff6b9d; letter-spacing: 0.15em; margin-bottom: 12px; font-weight: bold; }
+#question-text { font-size: 1.3rem; margin-bottom: 24px; line-height: 1.5; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option {
+  padding: 14px 18px; background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.15); border-radius: 10px;
+  cursor: pointer; transition: all 0.2s ease; text-align: left;
+  font-size: 1rem; color: #fff; font-family: inherit;
+}
+.option:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,107,157,0.5); }
+.option.selected {
+  background: linear-gradient(135deg, rgba(255,107,157,0.3), rgba(192,96,255,0.3));
+  border-color: #ff6b9d; box-shadow: 0 0 12px rgba(255,107,157,0.4);
+}
+.nav-buttons { display: flex; justify-content: space-between; gap: 12px; }
+.nav-buttons button { flex: 1; }
+#result-screen { text-align: center; }
+.result-card {
+  background: rgba(255,255,255,0.08); padding: 30px 24px; border-radius: 16px;
+  margin: 24px 0; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.12);
+}
+.score-circle {
+  width: 160px; height: 160px; border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b9d, #c060ff);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px; box-shadow: 0 0 30px rgba(192,96,255,0.5);
+}
+#score-value { font-size: 3.5rem; font-weight: bold; }
+.score-unit { font-size: 1.2rem; margin-left: 4px; }
+#result-title { font-size: 1.8rem; margin-bottom: 8px; }
+.result-rank { font-size: 1.1rem; color: #ff6b9d; margin-bottom: 20px; font-weight: bold; }
+.result-description { text-align: left; background: rgba(0,0,0,0.2); padding: 18px; border-radius: 10px; margin: 16px 0; }
+.result-detail { margin-top: 24px; text-align: left; }
+.result-detail h3 { margin-bottom: 14px; font-size: 1.1rem; }
+.category-row { margin: 12px 0; }
+.category-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.95rem; }
+.category-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+.category-fill { height: 100%; background: linear-gradient(90deg, #ff6b9d, #c060ff); border-radius: 999px; transition: width 0.6s ease; }
+.share-section { margin: 24px 0; }
+.share-section h3 { margin-bottom: 14px; }
+.btn-share {
+  background: rgba(255,255,255,0.15); color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  margin: 6px; padding: 12px 24px; font-size: 0.95rem;
+}
+.btn-share:hover { background: rgba(255,255,255,0.25); }
+.btn-share.twitter { background: #000; border-color: #333; }
+@media (max-width: 600px) {
+  h1 { font-size: 1.8rem; }
+  .subtitle { font-size: 1rem; }
+  #question-text { font-size: 1.1rem; }
+  .container { padding: 10px; }
+  .score-circle { width: 130px; height: 130px; }
+  #score-value { font-size: 2.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <section id="start-screen" class="screen active">
+    <h1>🌙 むっつり度診断 🌙</h1>
+    <p class="subtitle">100問の質問であなたの「むっつり度」を診断します</p>
+    <div class="info-box">
+      <p>⚠️ このサイトはエンターテインメント目的の診断です。</p>
+      <p>📝 全 <strong>100問</strong> / 所要時間 約5〜10分</p>
+      <p>🔒 回答データはあなたのブラウザ内のみで処理され、外部送信されません</p>
+    </div>
+    <button id="start-btn" class="btn-primary">診断を始める</button>
+    <p class="footer-note">※18歳未満は保護者の同意のもとご利用ください</p>
+  </section>
+
+  <section id="quiz-screen" class="screen">
+    <div class="progress-container">
+      <div class="progress-info">
+        <span id="question-counter">1 / 100</span>
+        <span id="progress-percent">1%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+    <div class="question-card">
+      <p class="question-number">Question <span id="q-num">1</span></p>
+      <h2 id="question-text"></h2>
+      <div id="options" class="options"></div>
+    </div>
+    <div class="nav-buttons">
+      <button id="prev-btn" class="btn-secondary">← 戻る</button>
+      <button id="next-btn" class="btn-primary">次へ →</button>
+    </div>
+  </section>
+
+  <section id="result-screen" class="screen">
+    <h1>診断結果</h1>
+    <div class="result-card">
+      <div class="score-circle">
+        <span id="score-value">0</span>
+        <span class="score-unit">点</span>
+      </div>
+      <h2 id="result-title"></h2>
+      <p class="result-rank">ランク: <span id="result-rank">-</span></p>
+      <div class="result-description">
+        <p id="result-description"></p>
+      </div>
+      <div class="result-detail">
+        <h3>📊 カテゴリ別スコア</h3>
+        <div id="category-scores"></div>
+      </div>
+    </div>
+    <div class="share-section">
+      <h3>結果をシェア</h3>
+      <button id="share-twitter" class="btn-share twitter">𝕏 でシェア</button>
+      <button id="copy-result" class="btn-share">結果をコピー</button>
+    </div>
+    <button id="retry-btn" class="btn-primary">もう一度診断する</button>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   100問の質問データ
+   category: thought(思考) / reaction(反応) / behavior(行動) / fantasy(妄想) / honesty(本音)
+   各選択肢に 0〜4点 のスコア
+   ========================================================= */
+const QUESTIONS = [
+  // --- 思考系 (1-20) ---
+  { q: "電車の中でつい異性をチラ見してしまう", c: "thought" },
+  { q: "下ネタを言われると顔には出ないが内心ドキッとする", c: "reaction" },
+  { q: "恋愛ドラマのキスシーンで思わず画面に集中する", c: "reaction" },
+  { q: "アイドルや俳優の水着姿をネットで検索したことがある", c: "behavior" },
+  { q: "見た目はマジメだとよく言われる", c: "honesty" },
+  { q: "夢の中で恋愛的な妄想をすることがある", c: "fantasy" },
+  { q: "SNSで気になる人の過去の投稿を遡って見る", c: "behavior" },
+  { q: "テレビでお色気シーンが流れると気まずいが目は離せない", c: "reaction" },
+  { q: "好きな人のことを一日中考えてしまう日がある", c: "thought" },
+  { q: "下品な話題は苦手なフリをしてしまう", c: "honesty" },
+  { q: "本屋でつい大人向けコーナーが気になる", c: "behavior" },
+  { q: "美術館のヌード作品を真剣に鑑賞してしまう", c: "behavior" },
+  { q: "「清楚」「真面目」と言われると少し罪悪感がある", c: "honesty" },
+  { q: "深夜にひとりで考え事をする時間が好き", c: "thought" },
+  { q: "恋愛系の小説や漫画を密かに読む", c: "behavior" },
+  { q: "好きなタイプを聞かれると本音を隠してしまう", c: "honesty" },
+  { q: "誰かの体型を無意識に観察してしまう", c: "thought" },
+  { q: "妄想で恋人と過ごす理想のデートを描く", c: "fantasy" },
+  { q: "「自分は意外と○○なんです」と言いたくなる瞬間がある", c: "honesty" },
+  { q: "他人には言えない趣味や好みがある", c: "honesty" },
+
+  // --- 反応系 (21-40) ---
+  { q: "下ネタで盛り上がる会話に密かに参加したい", c: "reaction" },
+  { q: "意外な人のセクシーな一面を見ると動揺する", c: "reaction" },
+  { q: "アニメや漫画の際どいシーンを何度も読み返す", c: "behavior" },
+  { q: "「えっち？」と聞かれると即否定するが内心図星", c: "honesty" },
+  { q: "好きな人の何気ない仕草に過剰反応する", c: "reaction" },
+  { q: "香水や柔軟剤の匂いに敏感に反応する", c: "reaction" },
+  { q: "電車の吊り革広告の美容系をついじっと見る", c: "thought" },
+  { q: "深夜番組をこっそり楽しんでいる", c: "behavior" },
+  { q: "「真面目だね」と言われると少し悔しい", c: "honesty" },
+  { q: "ピンク色や赤色の下着に密かに興味がある", c: "thought" },
+  { q: "雑誌の恋愛特集を本屋で立ち読みする", c: "behavior" },
+  { q: "好きな人のSNSを毎日チェックする", c: "behavior" },
+  { q: "周囲の人より恋愛経験が少ないと感じる", c: "honesty" },
+  { q: "夢で異性に告白されるシーンを見たことがある", c: "fantasy" },
+  { q: "恋愛ものの映画を一人で何度も見る", c: "behavior" },
+  { q: "「絶対そんなこと考えてなさそう」と言われがち", c: "honesty" },
+  { q: "胸キュンシーンで心拍数が上がる", c: "reaction" },
+  { q: "意外と肉食系だと自分でも思う瞬間がある", c: "honesty" },
+  { q: "好きな芸能人の壁紙をスマホに設定したことがある", c: "behavior" },
+  { q: "見た目とは違い情熱的な性格だと思う", c: "honesty" },
+
+  // --- 行動系 (41-60) ---
+  { q: "シャワー中に妄想や考え事をすることが多い", c: "fantasy" },
+  { q: "理想のシチュエーションを頭の中で何度も再生する", c: "fantasy" },
+  { q: "好きな人の写真をスクショで保存している", c: "behavior" },
+  { q: "コンビニで成人向け雑誌の表紙をチラ見する", c: "behavior" },
+  { q: "「真面目に見えて実は…」と言われると嬉しい", c: "honesty" },
+  { q: "夜眠れない時に恋愛妄想をする", c: "fantasy" },
+  { q: "好みのタイプの人を見るとつい目で追う", c: "thought" },
+  { q: "誰にも見せないメモや日記に本音を書く", c: "behavior" },
+  { q: "ロマンチックな場所に密かに憧れている", c: "fantasy" },
+  { q: "「○○な性格に見えない」とよく言われる", c: "honesty" },
+  { q: "好きな人の前では自分を取り繕う", c: "behavior" },
+  { q: "深夜のラジオや配信を密かに聞く", c: "behavior" },
+  { q: "「いい子ぶってる」と自分で思うことがある", c: "honesty" },
+  { q: "映画の濡れ場で気まずく感じるフリをする", c: "honesty" },
+  { q: "好きな人の些細な情報を全部覚えている", c: "behavior" },
+  { q: "妄想力には自信がある", c: "fantasy" },
+  { q: "「えっちっぽい話」を振られると話題を変える", c: "honesty" },
+  { q: "音楽の歌詞に深い意味を読み取ってしまう", c: "thought" },
+  { q: "好きな人と偶然会う妄想をしたことがある", c: "fantasy" },
+  { q: "見た目より中身は情熱的だと思う", c: "honesty" },
+
+  // --- 妄想系 (61-80) ---
+  { q: "理想のキスシーンを具体的に思い描ける", c: "fantasy" },
+  { q: "恋愛シミュレーションゲームに密かにハマった経験がある", c: "behavior" },
+  { q: "好きな人と二人きりになる場面を想像する", c: "fantasy" },
+  { q: "妄想の中では大胆な性格になれる", c: "fantasy" },
+  { q: "ベッドに入ってから30分以上妄想にふけることがある", c: "fantasy" },
+  { q: "「自分は鈍感」と思われがちだが実は気づいている", c: "honesty" },
+  { q: "好きな人の声を録音したいと思ったことがある", c: "fantasy" },
+  { q: "ドラマの主人公に自分を重ねてしまう", c: "fantasy" },
+  { q: "理想の恋人像が細かい部分まで決まっている", c: "fantasy" },
+  { q: "見た目で誤解されることが多い", c: "honesty" },
+  { q: "好きな人と手をつなぐ妄想をする", c: "fantasy" },
+  { q: "「あの人ってむっつりっぽい」と言われた経験がある", c: "honesty" },
+  { q: "誰にも言えない理想のシチュエーションがある", c: "fantasy" },
+  { q: "妄想と現実の境界が一瞬わからなくなる時がある", c: "fantasy" },
+  { q: "本心を隠して笑顔を作るのが得意", c: "honesty" },
+  { q: "好きな人の香りを覚えている", c: "reaction" },
+  { q: "「真面目すぎる」と言われるのが本当はちょっと嫌", c: "honesty" },
+  { q: "深夜の方が思考が活発になる", c: "thought" },
+  { q: "誰かに密かに片思いしている", c: "honesty" },
+  { q: "「秘密」と言われるとワクワクする", c: "reaction" },
+
+  // --- 本音系 (81-100) ---
+  { q: "「実は経験豊富かも」と思われたいことがある", c: "honesty" },
+  { q: "見た目とのギャップを楽しみたい", c: "honesty" },
+  { q: "誰にも見られていないと思うと本性が出る", c: "honesty" },
+  { q: "「優等生」と呼ばれると複雑な気持ちになる", c: "honesty" },
+  { q: "好きなジャンルを聞かれて当たり障りなく答えがち", c: "honesty" },
+  { q: "実は刺激的なことに憧れている", c: "honesty" },
+  { q: "「清純派」と言われると吹き出しそうになる", c: "honesty" },
+  { q: "本当の自分を理解してくれる人が欲しい", c: "honesty" },
+  { q: "「○○には興味ない」と言いつつ気になっている", c: "honesty" },
+  { q: "誰にも言えない好みやフェチがある", c: "honesty" },
+  { q: "「むっつり」という言葉に共感する", c: "honesty" },
+  { q: "好奇心は人より強い方だと思う", c: "thought" },
+  { q: "夜の方が本性が出やすい", c: "honesty" },
+  { q: "「真面目」と「実は」のギャップを楽しまれたい", c: "honesty" },
+  { q: "周囲が知ったら驚くような趣味がある", c: "honesty" },
+  { q: "「無口だから何考えてるか分からない」と言われる", c: "honesty" },
+  { q: "心の中で密かにツッコミを入れている", c: "thought" },
+  { q: "「恋愛とか興味なさそう」と言われるが本当は興味津々", c: "honesty" },
+  { q: "本心を見抜かれるとドキッとする", c: "reaction" },
+  { q: "実は自分のむっつり度はかなり高いと思う", c: "honesty" }
+];
+
+const OPTIONS = [
+  { label: "まったく当てはまらない", score: 0 },
+  { label: "あまり当てはまらない", score: 1 },
+  { label: "どちらでもない", score: 2 },
+  { label: "やや当てはまる", score: 3 },
+  { label: "とても当てはまる", score: 4 }
+];
+
+const CATEGORY_NAMES = {
+  thought:  "🤔 思考むっつり度",
+  reaction: "😳 反応むっつり度",
+  behavior: "🔍 行動むっつり度",
+  fantasy:  "💭 妄想むっつり度",
+  honesty:  "🎭 本音ギャップ度"
+};
+
+/* 結果判定（最大400点） */
+const RESULTS = [
+  {
+    min: 0, max: 80,
+    title: "🌸 純粋ピュアタイプ",
+    rank: "S",
+    desc: "あなたはとても素直で純粋な心の持ち主。むっつり要素はほぼ見当たりません。見た目通りの清らかさが魅力。表裏のない正直さで、周囲から信頼される存在です。"
+  },
+  {
+    min: 81, max: 160,
+    title: "🍀 ライトむっつりタイプ",
+    rank: "A",
+    desc: "基本的には真面目ですが、ほんの少しだけ秘密の引き出しを持っています。健全な範囲の好奇心の持ち主。誰にでもある「ちょっとした内緒」レベルなので、安心してください。"
+  },
+  {
+    min: 161, max: 240,
+    title: "🌙 標準むっつりタイプ",
+    rank: "B",
+    desc: "見た目と中身に程よいギャップがある、いわゆる「普通のむっつり」。表面はクールでも内心はけっこう色々考えているタイプ。多くの人が共感できる、ごく一般的な範囲です。"
+  },
+  {
+    min: 241, max: 320,
+    title: "🔥 ハイレベルむっつりタイプ",
+    rank: "A+",
+    desc: "見た目とのギャップが激しい、本格的なむっつりさん。真面目に見られがちですが、内側は妄想と好奇心でかなり賑やか。そのギャップが最大の魅力になっているはずです。"
+  },
+  {
+    min: 321, max: 400,
+    title: "👑 むっつり大魔王",
+    rank: "SSS",
+    desc: "おめでとうございます、あなたは伝説級のむっつりです。表向きの清楚さと内面の深さのギャップは、もはや一つのエンターテインメント。その奥深さ、誰にも真似できません。"
+  }
+];
+
+/* =========================================================
+   アプリ本体
+   ========================================================= */
+let currentIndex = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+
+const startScreen = document.getElementById('start-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultScreen = document.getElementById('result-screen');
+
+function show(screen) {
+  [startScreen, quizScreen, resultScreen].forEach(s => s.classList.remove('active'));
+  screen.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentIndex];
+  document.getElementById('q-num').textContent = currentIndex + 1;
+  document.getElementById('question-text').textContent = q.q;
+  document.getElementById('question-counter').textContent = `${currentIndex + 1} / ${QUESTIONS.length}`;
+
+  const percent = Math.round(((currentIndex + 1) / QUESTIONS.length) * 100);
+  document.getElementById('progress-percent').textContent = `${percent}%`;
+  document.getElementById('progress-fill').style.width = `${percent}%`;
+
+  const optionsEl = document.getElementById('options');
+  optionsEl.innerHTML = '';
+  OPTIONS.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option' + (answers[currentIndex] === idx ? ' selected' : '');
+    btn.textContent = opt.label;
+    btn.addEventListener('click', () => {
+      answers[currentIndex] = idx;
+      const clickedQuestionIndex = currentIndex; // クリックした問題の番号を記憶
+      renderQuestion();
+      
+      // 自動で次へ進む処理（連打バグ防止のため、同じ問題にいる場合のみ進む）
+      setTimeout(() => {
+        if (currentIndex === clickedQuestionIndex) {
+          if (currentIndex < QUESTIONS.length - 1) {
+            currentIndex++;
+            renderQuestion();
+          } else {
+            updateNavButtons();
+          }
+        }
+      }, 300);
+    });
+    optionsEl.appendChild(btn);
+  });
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  document.getElementById('prev-btn').disabled = currentIndex === 0;
+  const nextBtn = document.getElementById('next-btn');
+  if (currentIndex === QUESTIONS.length - 1) {
+    nextBtn.textContent = '結果を見る 🎉';
+    nextBtn.disabled = answers[currentIndex] === null;
+  } else {
+    nextBtn.textContent = '次へ →';
+    nextBtn.disabled = answers[currentIndex] === null;
+  }
+}
+
+function calculateResult() {
+  let total = 0;
+  const categoryScores = { thought: 0, reaction: 0, behavior: 0, fantasy: 0, honesty: 0 };
+  const categoryCounts = { thought: 0, reaction: 0, behavior: 0, fantasy: 0, honesty: 0 };
+
+  QUESTIONS.forEach((q, i) => {
+    // もし未回答(null)の問題があってもエラーにならないように、0点として処理する安全策を追加
+    const ans = answers[i];
+    const score = ans !== null ? OPTIONS[ans].score : 0; 
+    
+    total += score;
+    categoryScores[q.c] += score;
+    categoryCounts[q.c]++;
+  });
+
+  const result = RESULTS.find(r => total >= r.min && total <= r.max);
+  return { total, categoryScores, categoryCounts, result };
+}
+
+function showResult() {
+  const { total, categoryScores, categoryCounts, result } = calculateResult();
+  
+  // 万が一resultが見つからなかった場合のエラー防止
+  if (!result) return;
+
+  document.getElementById('score-value').textContent = total;
+  document.getElementById('result-title').textContent = result.title;
+  document.getElementById('result-rank').textContent = result.rank;
+  document.getElementById('result-description').textContent = result.desc;
+
+  const catContainer = document.getElementById('category-scores');
+  catContainer.innerHTML = '';
+  Object.keys(categoryScores).forEach(key => {
+    const max = categoryCounts[key] * 4;
+    const score = categoryScores[key];
+    const percent = Math.round((score / max) * 100);
+    const row = document.createElement('div');
+    row.className = 'category-row';
+    row.innerHTML = `
+      <div class="category-label">
+        <span>${CATEGORY_NAMES[key]}</span>
+        <span>${score} / ${max} (${percent}%)</span>
+      </div>
+      <div class="category-bar">
+        <div class="category-fill" style="width: ${percent}%"></div>
+      </div>
+    `;
+    catContainer.appendChild(row);
+  });
+
+  show(resultScreen);
+}
+
+/* イベント設定 */
+document.getElementById('start-btn').addEventListener('click', () => {
+  currentIndex = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  renderQuestion();
+  show(quizScreen);
+});
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  if (currentIndex > 0) { currentIndex--; renderQuestion(); }
+});
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (answers[currentIndex] === null) return;
+  if (currentIndex < QUESTIONS.length - 1) {
+    currentIndex++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+});
+
+document.getElementById('retry-btn').addEventListener('click', () => {
+  show(startScreen);
+});
+
+document.getElementById('share-twitter').addEventListener('click', () => {
+  const { total, result } = calculateResult();
+  if(!result) return;
+  const text = `私のむっつり度は ${total}点 / 400点\n結果: ${result.title} (ランク${result.rank})\n#むっつり度診断`;
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+});
+
+document.getElementById('copy-result').addEventListener('click', () => {
+  const { total, result } = calculateResult();
+  if(!result) return;
+  const text = `【むっつり度診断】\nスコア: ${total} / 400点\n結果: ${result.title}\nランク: ${result.rank}\n\n${result.desc}`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('結果をコピーしました！');
+  }).catch(() => {
+    alert('コピーに失敗しました');
+  });
+});
+</script>
+</body>
+</html>
